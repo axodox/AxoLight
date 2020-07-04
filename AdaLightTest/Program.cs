@@ -111,7 +111,7 @@ namespace AdaLightTest
 
       var deviceInformation = deviceInformations.FirstOrDefault();
       var serialDevice = await SerialDevice.FromIdAsync(deviceInformation.Id);
-      serialDevice.BaudRate = 115200;
+      serialDevice.BaudRate = 1000000;
             
       var dataWriter = new DataWriter(serialDevice.OutputStream);
 
@@ -120,7 +120,8 @@ namespace AdaLightTest
       while (true)
       {
         watch.Start();
-        ushort count = 20;
+        ushort count = 156;
+        //ushort count = 50;
         var messageLength = 6 + count * 3;
 
         var stream = new MemoryStream(messageLength);
@@ -137,13 +138,15 @@ namespace AdaLightTest
         for (var i = 0; i < count; i++)
         {
           //var p = Math.Sin(Math.PI * ((i + frame / 100.0) % (count - 1)) / (count - 1)) * 255;
-          var s = ((double)(i + frame / 25.0) % (count - 1)) / (count - 1);
-          var color = HSLToRGB(s, 1, 0.25, 1);
+          //var s = ((double)(i + frame / 25.0) % (count - 1)) / (count - 1);
+          var s = ((double)(i * 8 + frame) % (count - 1)) / (count - 1);
+          //var color = HSLToRGB(s, 1, (frame % 2 > 0) ? 0.5 : 0, 1);
+          var color = HSLToRGB(s, 1, 0.20, 1);
           //var p = ((count - 1 - i) / (count - 1.0)) * 255;
           //var q = ToneMap(p);
           //var x = (byte)(q);
           //Console.WriteLine(x);
-
+          //var color = new RGBA(100, 100, 100, 0);
           //var y = (frame % 100) / 100.0 > 0.5 ? 0 : 1;
           //var x = (byte)(i % 2 == y ? 64 : 255);
           stream.WriteByte(ToneMap(color.R));
@@ -155,11 +158,13 @@ namespace AdaLightTest
 
         dataWriter.WriteBytes(stream.ToArray());
         await dataWriter.StoreAsync();
+        Thread.Sleep(6);
+
         watch.Stop();
         var time = watch.Elapsed;
         watch.Reset();
         frame++;
-        if(frame % 10 == 0) Console.WriteLine(1 / time.TotalSeconds);
+        if (frame % 10 == 0) Console.WriteLine(1 / time.TotalSeconds);
       }
 
       var dataReader = new DataReader(serialDevice.InputStream);
@@ -167,9 +172,28 @@ namespace AdaLightTest
       var text = dataReader.ReadString(3);
     }
 
+    static byte[] _gamma8 = new byte[] {
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
+    1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
+    2,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  5,  5,  5,
+    5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10,
+   10, 10, 11, 11, 11, 12, 12, 13, 13, 13, 14, 14, 15, 15, 16, 16,
+   17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 24, 24, 25,
+   25, 26, 27, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 35, 35, 36,
+   37, 38, 39, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 50,
+   51, 52, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 66, 67, 68,
+   69, 70, 72, 73, 74, 75, 77, 78, 79, 81, 82, 83, 85, 86, 87, 89,
+   90, 92, 93, 95, 96, 98, 99,101,102,104,105,107,109,110,112,114,
+  115,117,119,120,122,124,126,127,129,131,133,135,137,138,140,142,
+  144,146,148,150,152,154,156,158,160,162,164,167,169,171,173,175,
+  177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
+  215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
+
     private static byte ToneMap(byte p)
     {
-      return (byte)(Math.Pow(2, p / 255.0 * 8) - 1);
+      //return (byte)(Math.Pow(2, p / 255.0 * 8) - 1);
+      return _gamma8[p];
     }
   }
 }
