@@ -9,11 +9,11 @@ using namespace winrt::Windows::Data::Json;
 
 namespace AxoLight::Settings
 {
-  Settings SettingsImporter::Parse(const winrt::hstring& path)
+  Settings SettingsImporter::Parse(const std::filesystem::path& path)
   {
     try
     {
-      auto file = StorageFile::GetFileFromPathAsync(path).get();
+      auto file = StorageFile::GetFileFromPathAsync(path.c_str()).get();
       auto text = FileIO::ReadTextAsync(file).get();
       auto json = JsonObject::Parse(text);
 
@@ -41,7 +41,7 @@ namespace AxoLight::Settings
     }
     catch (...)
     {
-      wprintf(L"Failed to parse settings at %s.", path.c_str());
+      wprintf(L"Failed to parse settings from %s.", path.c_str());
       return {};
     }
   }
@@ -172,7 +172,7 @@ namespace AxoLight::Settings
           const auto& items = property.Value().GetArray();
           for (const auto& item : items)
           {
-            Display::DisplayLightStrip strip;
+            Display::DisplayLightStrip strip{};
             Parse(item.GetObject(), strip);
             displayLightLayout.Segments.push_back(strip);
           }          

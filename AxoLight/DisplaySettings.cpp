@@ -28,16 +28,16 @@ namespace AxoLight::Display
 
     auto displaySize = reinterpret_cast<const float2&>(layout.DisplaySize);
     auto sampleSize = float2(layout.SampleSize);
-    auto reducedDisplaySize = displaySize - sampleSize / 2.f;
     auto displayCenter = displaySize / 2.f;
+    auto reducedDisplaySize = displayCenter - sampleSize / 2.f;
+    
     array<AngleRange, 4> angleRanges = {
-      AngleRange { atan2(-displayCenter.y, displayCenter.x), atan2(displayCenter.y, displayCenter.x), Side::Right },
-      AngleRange { atan2(displayCenter.y, displayCenter.x), atan2(displayCenter.y, -displayCenter.x), Side::Top },
-      AngleRange { atan2(displayCenter.y, -displayCenter.x), atan2(-displayCenter.y, -displayCenter.x), Side::Left },
-      AngleRange { atan2(-displayCenter.y, -displayCenter.x), atan2(-displayCenter.y, displayCenter.x), Side::Bottom }
+      AngleRange { atan2(-reducedDisplaySize.y, reducedDisplaySize.x), atan2(reducedDisplaySize.y, reducedDisplaySize.x), Side::Right },
+      AngleRange { atan2(reducedDisplaySize.y, reducedDisplaySize.x), atan2(reducedDisplaySize.y, -reducedDisplaySize.x), Side::Top },
+      AngleRange { atan2(reducedDisplaySize.y, -reducedDisplaySize.x), atan2(-reducedDisplaySize.y, -reducedDisplaySize.x), Side::Left },
+      AngleRange { atan2(-reducedDisplaySize.y, -reducedDisplaySize.x), atan2(-reducedDisplaySize.y, reducedDisplaySize.x), Side::Bottom }
     };
 
-    vector<float2> samplePoints;
     auto startPosition = layout.StartPosition.ToTexturePosition(layout.DisplaySize);
     for (auto& segment : layout.Segments)
     {
@@ -53,7 +53,7 @@ namespace AxoLight::Display
 
         for (auto angleRange : angleRanges)
         {
-          if (angle > angleRange.Min && angle <= angleRange.Max)
+          if (angle >= angleRange.Min && angle <= angleRange.Max)
           {
             switch (angleRange.Side)
             {
@@ -78,8 +78,8 @@ namespace AxoLight::Display
           }
         }
 
-        position = float2(position.x / displaySize.x, 1 - position.y / displaySize.y);
-        samplePoints.push_back(position);
+        position = (float2(position.x, -position.y) + displayCenter) / displaySize;
+        settings.SamplePoints.push_back(position);
       }
 
       startPosition = endPosition;

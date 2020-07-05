@@ -102,12 +102,16 @@
   <ItemGroup>
     <ClInclude Include="AdaLightController.h" />
     <ClInclude Include="DisplaySettings.h" />
+    <ClInclude Include="Graphics.h" />
+    <ClInclude Include="Infrastructure.h" />
     <ClInclude Include="SettingsImporter.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AdaLightController.cpp" />
     <ClCompile Include="DisplaySettings.cpp" />
+    <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="Infrastructure.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -117,6 +121,13 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
+    <CopyFileToFolders Include="settings.json">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <FileType>Document</FileType>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </CopyFileToFolders>
     <Text Include="readme.txt">
       <DeploymentContent>false</DeploymentContent>
     </Text>

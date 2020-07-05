@@ -2,6 +2,12 @@
 #include <vector>
 #include <unordered_map>
 #include <thread>
+#include <filesystem>
+
+#include <dxgi1_6.h>
+#include <d3d11_4.h>
+
+#pragma comment(lib, "d3d11.lib")
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Numerics.h>

@@ -1,0 +1,24 @@
+{
+  "lightLayout": {
+    "displaySize": {
+      "width": 100,
+      "height": 80
+    },
+    "startPosition": {
+      "reference": "BottomRight",
+      "x": 0,
+      "y": 0
+    },
+    "segments": [
+      {
+        "endPosition": {
+          "reference": "BottomLeft",
+          "x": 0,
+          "y": 0
+        },
+        "lightCount": 16
+      }
+    ],
+    "sampleSize": 10
+  }
+}

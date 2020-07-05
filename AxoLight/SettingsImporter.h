@@ -13,17 +13,17 @@ namespace AxoLight::Settings
   class SettingsImporter
   {
   public:
-    Settings Parse(const winrt::hstring& path);
+    static Settings Parse(const std::filesystem::path& path);
 
   private:
-    void Parse(const winrt::Windows::Data::Json::JsonObject& json, Lighting::AdaLightOptions& options);
+    static void Parse(const winrt::Windows::Data::Json::JsonObject& json, Lighting::AdaLightOptions& options);
 
-    void Parse(const winrt::Windows::Data::Json::JsonObject& json, Display::DisplaySize& displaySize);
+    static void Parse(const winrt::Windows::Data::Json::JsonObject& json, Display::DisplaySize& displaySize);
 
-    void Parse(const winrt::Windows::Data::Json::JsonObject& json, Display::DisplayPosition& displayPosition);
+    static void Parse(const winrt::Windows::Data::Json::JsonObject& json, Display::DisplayPosition& displayPosition);
 
-    void Parse(const winrt::Windows::Data::Json::JsonObject& json, Display::DisplayLightStrip& displayLightStrip);
+    static void Parse(const winrt::Windows::Data::Json::JsonObject& json, Display::DisplayLightStrip& displayLightStrip);
 
-    void Parse(const winrt::Windows::Data::Json::JsonObject& json, Display::DisplayLightLayout& displayLightLayout);
+    static void Parse(const winrt::Windows::Data::Json::JsonObject& json, Display::DisplayLightLayout& displayLightLayout);
   };
 }
