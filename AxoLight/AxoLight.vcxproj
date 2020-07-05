@@ -101,14 +101,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AdaLightController.h" />
+    <ClInclude Include="DisplaySettings.h" />
+    <ClInclude Include="SettingsImporter.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AdaLightController.cpp" />
+    <ClCompile Include="DisplaySettings.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SettingsImporter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
