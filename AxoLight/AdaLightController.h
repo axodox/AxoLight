@@ -12,7 +12,7 @@ namespace AxoLight::Lighting
     uint16_t UsbVendorId = 0x1A86;
     uint16_t UsbProductId = 0x7523;
     uint32_t BaudRate = 1000000;
-    std::chrono::milliseconds LedSyncDuration = std::chrono::milliseconds(6);
+    std::chrono::milliseconds LedSyncDuration = std::chrono::milliseconds(7);
   };
 
   class AdaLightController

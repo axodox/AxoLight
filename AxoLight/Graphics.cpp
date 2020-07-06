@@ -463,7 +463,7 @@ namespace AxoLight::Graphics
     output(output)
   { }
   
-  d3d11_texture_2d& d3d11_desktop_duplication::lock_frame(uint16_t timeout)
+  d3d11_texture_2d& d3d11_desktop_duplication::lock_frame(uint16_t timeout, std::function<void()> timeoutCallback)
   {
     com_ptr<IDXGIResource> resource;
     do
@@ -477,14 +477,18 @@ namespace AxoLight::Graphics
       {
         DXGI_OUTDUPL_FRAME_INFO frameInfo;
         auto result = _outputDuplication->AcquireNextFrame(timeout, &frameInfo, resource.put());
-        if (result != ERROR_SUCCESS)
+        if (result == DXGI_ERROR_WAIT_TIMEOUT)
+        {
+          if (timeoutCallback) timeoutCallback();
+        }
+        else if (result != ERROR_SUCCESS)
         {
           _outputDuplication = nullptr;
         }
       }
       else
-      {
-        Sleep(100);
+      { 
+        this_thread::sleep_for(100ms);
       }
     } while (!resource);
 

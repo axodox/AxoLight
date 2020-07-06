@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <thread>
+#include <functional>
 #include <filesystem>
 
 #include <dxgi1_6.h>

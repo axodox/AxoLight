@@ -95,9 +95,13 @@ int main()
   memset(pixels.data(), 127, pixels.size() * 4);
   auto texture = d3d11_texture_2d::make_immutable<uint32_t>(renderer.device, DXGI_FORMAT_B8G8R8A8_UNORM, 4, 4, pixels);*/
 
+  std::vector<RGB> lights;
+  lights.reserve(displaySettings.SamplePoints.size());
   while (true)
   {
-    auto& texture = duplication.lock_frame();
+    auto& texture = duplication.lock_frame(1000u, [&] {
+      controller.Push(lights);
+    });
 
 #ifndef NDEBUG
     auto& target = renderer.render_target();
@@ -123,8 +127,7 @@ int main()
     ledColorSums.copy_to(renderer.context, ledColorStage);
     auto data = ledColorStage.get_data(renderer.context);
 
-    std::vector<RGB> lights;
-    lights.reserve(displaySettings.SamplePoints.size());
+    lights.clear();
     for (auto& light : data)
     {
       lights.push_back({ uint8_t(light[0]), uint8_t(light[1]), uint8_t(light[2]) });
