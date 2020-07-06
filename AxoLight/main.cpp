@@ -52,11 +52,10 @@ int main()
   dev.cb = sizeof(dev);
   EnumDisplayDevices(desc.DeviceName, 0, &dev, 0);
 
+#ifndef NDEBUG
   auto window = create_debug_window();
 
   d3d11_renderer_with_swap_chain renderer(adapter, window);
-
-  auto duplication = d3d11_desktop_duplication(renderer.device, output);
 
   auto vertexShader = d3d11_vertex_shader(renderer.device, root / L"SimpleVertexShader.cso");
   auto pixelShader = d3d11_pixel_shader(renderer.device, root / L"SimplePixelShader.cso");
@@ -64,24 +63,35 @@ int main()
   auto quad = Primitives::make_quad(renderer.device);
   vertexShader.set_input_layout(quad.vertex_buffer.input_desc());
 
-  auto sampler = d3d11_sampler_state(renderer.device, D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
   auto blendState = d3d11_blend_state(renderer.device, d3d11_blend_type::opaque);
-
   auto rasterizerState = d3d11_rasterizer_state(renderer.device, d3d11_rasterizer_type::cull_none);
+#else
+  d3d11_renderer renderer(adapter);
+#endif // NDEBUG  
+
+  auto duplication = d3d11_desktop_duplication(renderer.device, output);
+
+  auto sampler = d3d11_sampler_state(renderer.device, D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
 
   constants_t constants{
     displaySettings.SampleSize / -2,
-    displaySettings.SampleSize / 8
+    displaySettings.SampleSize / 16
   };
   auto constantBuffer = d3d11_constant_buffer<constants_t>::make_dynamic(renderer.device);
   constantBuffer.update(renderer.context, constants);
 
-  auto samplePoints = d3d11_structured_buffer<float2>::make_immutable(renderer.device, displaySettings.SamplePoints);
+  vector<float4> points;
+  for (auto& point : displaySettings.SamplePoints)
+  {
+    points.push_back({ point.x, point.y, 0, 0 });
+  }
+
+  auto samplePoints = d3d11_structured_buffer<float4>::make_immutable(renderer.device, points);
   auto ledColorSums = d3d11_structured_buffer<array<uint32_t, 4>>::make_writeable(renderer.device, (uint32_t)displaySettings.SamplePoints.size());
   auto samplerShader = d3d11_compute_shader(renderer.device, root / L"SamplerComputeShader.cso");
   auto ledColorStage = d3d11_structured_buffer<array<uint32_t, 4>>::make_staging(renderer.device, (uint32_t)displaySettings.SamplePoints.size());
 
-  /*vector<uint32_t> pixels(16);
+ /* vector<uint32_t> pixels(16);
   memset(pixels.data(), 127, pixels.size() * 4);
   auto texture = d3d11_texture_2d::make_immutable<uint32_t>(renderer.device, DXGI_FORMAT_B8G8R8A8_UNORM, 4, 4, pixels);*/
 
@@ -89,7 +99,7 @@ int main()
   {
     auto& texture = duplication.lock_frame();
 
-    
+#ifndef NDEBUG
     auto& target = renderer.render_target();
     target.set(renderer.context);
     target.clear(renderer.context, { 1.f, 0.f, 0.f, 1.f });
@@ -101,6 +111,7 @@ int main()
     blendState.set(renderer.context);
     rasterizerState.set(renderer.context);
     quad.draw(renderer.context);
+#endif
 
     //
     sampler.set(renderer.context, d3d11_shader_stage::cs);
@@ -117,11 +128,12 @@ int main()
     for (auto& light : data)
     {
       lights.push_back({ uint8_t(light[0]), uint8_t(light[1]), uint8_t(light[2]) });
-      //lights.push_back({ 0, 0, 255 });
     }
     controller.Push(lights);
 
+#ifndef NDEBUG
     renderer.swap_chain->Present(1, 0);
+#endif
 
     duplication.unlock_frame();
   }

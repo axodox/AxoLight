@@ -1,6 +1,6 @@
 SamplerState _sampler : register(s0);
 Texture2D _texture : register(t0);
-StructuredBuffer<float2> _samplePoints : register(t1);
+StructuredBuffer<float4> _samplePoints : register(t1);
 RWStructuredBuffer<uint4> _sumTexture : register(u0);
 
 cbuffer constants_t: register(b0)
@@ -12,7 +12,7 @@ cbuffer constants_t: register(b0)
 groupshared float2 _samplePoint;
 groupshared uint4 _sum = uint4(0, 0, 0, 0);
 
-[numthreads(8, 8, 1)]
+[numthreads(16, 16, 1)]
 void main( 
   uint3 groupId : SV_GroupID,
   uint3 threadId : SV_GroupThreadID)

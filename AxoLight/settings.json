@@ -1,22 +1,38 @@
 {
   "lightLayout": {
     "displaySize": {
-      "width": 100,
-      "height": 80
+      "width": 121.8,
+      "height": 68.5
     },
     "startPosition": {
       "reference": "BottomRight",
-      "x": 0,
-      "y": 0
+      "x": 2,
+      "y": 4
     },
     "segments": [
       {
         "endPosition": {
-          "reference": "BottomLeft",
-          "x": 0,
-          "y": 0
+          "reference": "TopRight",
+          "x": 2,
+          "y": 2
         },
-        "lightCount": 16
+        "lightCount": 37
+      },
+      {
+        "endPosition": {
+          "reference": "TopLeft",
+          "x": 2,
+          "y": 2
+        },
+        "lightCount": 69
+      },
+      {
+        "endPosition": {
+          "reference": "BottomLeft",
+          "x": 2,
+          "y": 4
+        },
+        "lightCount": 37
       }
     ],
     "sampleSize": 10

@@ -1,4 +1,6 @@
 ﻿#pragma once
+#define _USE_MATH_DEFINES
+
 #include <array>
 #include <vector>
 #include <unordered_map>

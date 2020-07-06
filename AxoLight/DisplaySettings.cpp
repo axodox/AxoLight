@@ -14,10 +14,24 @@ namespace AxoLight::Display
     Bottom
   };
 
+
+
   struct AngleRange
   {
     float Min, Max;
     Side Side;
+
+    bool Contains(float angle)
+    {
+      if (Min < Max)
+      {
+        return Min <= angle && angle <= Max;
+      }
+      else
+      {
+        return (Min <= angle && angle <= M_PI) || (-M_PI <= angle && angle <= Max);
+      }
+    }
   };
 
   DisplaySettings DisplaySettings::FromLayout(const DisplayLightLayout& layout)
@@ -54,7 +68,7 @@ namespace AxoLight::Display
 
         for (auto angleRange : angleRanges)
         {
-          if (angle >= angleRange.Min && angle <= angleRange.Max)
+          if (angleRange.Contains(angle))
           {
             switch (angleRange.Side)
             {
