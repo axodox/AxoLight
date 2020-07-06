@@ -48,6 +48,27 @@ namespace AxoLight::Graphics
 
     d3d11_texture_2d(const winrt::com_ptr<ID3D11Texture2D>& texture);
 
+    template<typename TItem>
+    static d3d11_texture_2d make_immutable(const winrt::com_ptr<ID3D11Device>& device, DXGI_FORMAT format, uint32_t width, uint32_t height, const winrt::array_view<TItem>& pixels)
+    {
+      CD3D11_TEXTURE2D_DESC desc(format, width, height);
+      desc.Usage = D3D11_USAGE_IMMUTABLE;
+      desc.ArraySize = 1;
+      desc.MipLevels = 1;
+
+      D3D11_SUBRESOURCE_DATA data = {};
+      data.pSysMem = pixels.data();
+      data.SysMemPitch = width * sizeof(TItem);
+
+      std::vector<D3D11_SUBRESOURCE_DATA> resources;
+      resources.push_back(data);
+
+      winrt::com_ptr<ID3D11Texture2D> texture;
+      winrt::check_hresult(device->CreateTexture2D(&desc, resources.data(), texture.put()));
+
+      return d3d11_texture_2d(texture);
+    }
+
     void set(const winrt::com_ptr<ID3D11DeviceContext>& context, d3d11_shader_stage stage, uint32_t slot = 0u) const;
   };
 
@@ -203,7 +224,7 @@ namespace AxoLight::Graphics
 
     static d3d11_constant_buffer make_dynamic(const winrt::com_ptr<ID3D11Device>& device)
     {
-      auto capacity = sizeof(constant_t);
+      auto capacity = (uint32_t)sizeof(constant_t);
       CD3D11_BUFFER_DESC desc(
         (capacity % 16 == 0 ? capacity : capacity + 16 - capacity % 16),
         D3D11_BIND_CONSTANT_BUFFER,
@@ -212,14 +233,14 @@ namespace AxoLight::Graphics
       );
 
       winrt::com_ptr<ID3D11Buffer> buffer;
-      check_hresult(device->CreateBuffer(&desc, nullptr, buffer.put()));
+      winrt::check_hresult(device->CreateBuffer(&desc, nullptr, buffer.put()));
 
       return d3d11_constant_buffer(buffer, capacity);
     }
 
-    void update(const constant_t& value) const
+    void update(const winrt::com_ptr<ID3D11DeviceContext>& context, const constant_t& value) const
     {
-      d3d11_buffer::update({ &value, capacity });
+      d3d11_buffer::update(context, winrt::array_view{ (uint8_t*)&value, capacity });
     }
 
     void set(const winrt::com_ptr<ID3D11DeviceContext>& context, d3d11_shader_stage stage, uint32_t slot = 0) const
@@ -228,17 +249,144 @@ namespace AxoLight::Graphics
       switch (stage)
       {
       case d3d11_shader_stage::cs:
-        context->CSSetConstantBuffers(slot, 1, buffers);
+        context->CSSetConstantBuffers(slot, 1, buffers.data());
         break;
       case d3d11_shader_stage::vs:
-        context->VSSetConstantBuffers(slot, 1, buffers);
+        context->VSSetConstantBuffers(slot, 1, buffers.data());
         break;
       case d3d11_shader_stage::ps:
-        context->PSSetConstantBuffers(slot, 1, buffers);
+        context->PSSetConstantBuffers(slot, 1, buffers.data());
         break;
       default:
         throw std::out_of_range("Invalid shader stage for constant buffer!");
       }
+    }
+  };
+
+  template<typename TItem>
+  struct d3d11_structured_buffer : public d3d11_buffer
+  {
+  private:
+    d3d11_structured_buffer(
+      const winrt::com_ptr<ID3D11Buffer>& buffer, 
+      uint32_t capacity,
+      const winrt::com_ptr<ID3D11ShaderResourceView>& view,
+      const winrt::com_ptr<ID3D11UnorderedAccessView> uav) :
+      d3d11_buffer(buffer),
+      view(view),
+      uav(uav),
+      capacity(capacity)
+    { }
+
+  public:
+    typedef TItem item_t;
+    const winrt::com_ptr<ID3D11ShaderResourceView> view;
+    const winrt::com_ptr<ID3D11UnorderedAccessView> uav;
+    uint32_t capacity;
+
+    static d3d11_structured_buffer make_immutable(const winrt::com_ptr<ID3D11Device>& device, const std::vector<item_t>& items)
+    {
+      CD3D11_BUFFER_DESC desc(
+        (uint32_t)(sizeof(item_t) * items.size()),
+        D3D11_BIND_SHADER_RESOURCE,
+        D3D11_USAGE_IMMUTABLE,
+        0,
+        D3D11_RESOURCE_MISC_BUFFER_STRUCTURED,
+        sizeof(item_t)
+      );
+
+      D3D11_SUBRESOURCE_DATA data{ items.data() };
+      winrt::com_ptr<ID3D11Buffer> buffer;
+      winrt::check_hresult(device->CreateBuffer(&desc, &data, buffer.put()));
+
+      D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc{};
+      viewDesc.Format = DXGI_FORMAT_UNKNOWN;
+      viewDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+      viewDesc.Buffer.ElementWidth = sizeof(item_t);
+
+      winrt::com_ptr<ID3D11ShaderResourceView> view;
+      winrt::check_hresult(device->CreateShaderResourceView(buffer.get(), &viewDesc, view.put()));
+
+      return d3d11_structured_buffer(buffer, (uint32_t)items.size(), view, nullptr);
+    }
+
+    static d3d11_structured_buffer make_writeable(const winrt::com_ptr<ID3D11Device>& device, uint32_t capacity)
+    {
+      CD3D11_BUFFER_DESC desc(
+        sizeof(item_t) * capacity,
+        D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS,
+        D3D11_USAGE_DEFAULT,
+        0,
+        D3D11_RESOURCE_MISC_BUFFER_STRUCTURED,
+        sizeof(item_t)
+      );
+
+      winrt::com_ptr<ID3D11Buffer> buffer;
+      winrt::check_hresult(device->CreateBuffer(&desc, nullptr, buffer.put()));
+
+      D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc{};
+      viewDesc.Format = DXGI_FORMAT_UNKNOWN;
+      viewDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+      viewDesc.Buffer.ElementWidth = sizeof(item_t);
+
+      winrt::com_ptr<ID3D11ShaderResourceView> view;
+      winrt::check_hresult(device->CreateShaderResourceView(buffer.get(), &viewDesc, view.put()));
+
+      D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
+      uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+      uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+      uavDesc.Buffer.NumElements = capacity;
+
+      winrt::com_ptr<ID3D11UnorderedAccessView> uav;
+      winrt::check_hresult(device->CreateUnorderedAccessView(buffer.get(), &uavDesc, uav.put()));
+
+      return d3d11_structured_buffer(buffer, capacity, view, uav);
+    }
+
+    static d3d11_structured_buffer make_staging(const winrt::com_ptr<ID3D11Device>& device, uint32_t capacity)
+    {
+      CD3D11_BUFFER_DESC desc(
+        sizeof(item_t) * capacity,
+        0,
+        D3D11_USAGE_STAGING,
+        D3D11_CPU_ACCESS_READ
+      );
+
+      winrt::com_ptr<ID3D11Buffer> buffer;
+      winrt::check_hresult(device->CreateBuffer(&desc, nullptr, buffer.put()));
+
+      return d3d11_structured_buffer(buffer, capacity, nullptr, nullptr);
+    }
+
+    void copy_to(const winrt::com_ptr<ID3D11DeviceContext>& context, const d3d11_structured_buffer& target)
+    {
+      context->CopyResource(target.resource.get(), resource.get());
+    }
+
+    std::vector<item_t> get_data(const winrt::com_ptr<ID3D11DeviceContext>& context)
+    {
+      D3D11_MAPPED_SUBRESOURCE mappedSubresource = {};
+
+      winrt::check_hresult(context->Map(buffer.get(), 0, D3D11_MAP_READ, 0, &mappedSubresource));
+
+      std::vector<item_t> items(capacity);
+      memcpy(items.data(), mappedSubresource.pData, capacity * sizeof(item_t));
+
+      context->Unmap(buffer.get(), 0);
+      return items;
+    }
+
+    void set_readonly(const winrt::com_ptr<ID3D11DeviceContext>& context, uint32_t slot = 0) const
+    {
+      std::array<ID3D11ShaderResourceView*, 1> views = { view.get() };
+      context->CSSetShaderResources(slot, 1, views.data());
+    }
+
+    void set_writeable(const winrt::com_ptr<ID3D11DeviceContext>& context, uint32_t slot = 0) const
+    {
+      auto uavInitialCount = 0u;
+      std::array<ID3D11UnorderedAccessView*, 1> views = { uav.get() };
+      context->CSSetUnorderedAccessViews(slot, 1, views.data(), &uavInitialCount);
     }
   };
 
@@ -308,7 +456,7 @@ namespace AxoLight::Graphics
 
     d3d11_compute_shader(const winrt::com_ptr<ID3D11Device>& device, const std::filesystem::path& path);
 
-    void run(const winrt::com_ptr<ID3D11DeviceContext>& context, uint32_t x, uint32_t y, uint32_t z) const;
+    void run(const winrt::com_ptr<ID3D11DeviceContext>& context, uint32_t x, uint32_t y = 1, uint32_t z = 1) const;
   };
 
   enum class d3d11_rasterizer_type

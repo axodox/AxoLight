@@ -88,13 +88,23 @@ namespace AxoLight::Graphics
   }
   
   com_ptr<ID3D11ShaderResourceView> d3d11_texture_2d::make_view(const com_ptr<ID3D11Texture2D>& texture)
-  {
-    com_ptr<ID3D11Device> device;
-    texture->GetDevice(device.put());
+  {    
+    D3D11_TEXTURE2D_DESC desc;
+    texture->GetDesc(&desc);
 
-    com_ptr<ID3D11ShaderResourceView> view;
-    device->CreateShaderResourceView(texture.get(), nullptr, view.put());
-    return view;
+    if (desc.BindFlags & D3D11_BIND_SHADER_RESOURCE)
+    {
+      com_ptr<ID3D11Device> device;
+      texture->GetDevice(device.put());
+
+      com_ptr<ID3D11ShaderResourceView> view;
+      winrt::check_hresult(device->CreateShaderResourceView(texture.get(), nullptr, view.put()));
+      return view;
+    }
+    else
+    {
+      return nullptr;
+    }
   }
   
   d3d11_texture_2d::d3d11_texture_2d(const com_ptr<ID3D11Texture2D>& texture) :

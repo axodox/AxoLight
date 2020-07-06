@@ -24,9 +24,10 @@ namespace AxoLight::Display
   {
     DisplaySettings settings{};
     settings.AspectRatio = layout.DisplaySize.Width / layout.DisplaySize.Height;
-    settings.SampleSize = layout.SampleSize;
 
     auto displaySize = reinterpret_cast<const float2&>(layout.DisplaySize);
+    settings.SampleSize = float2(layout.SampleSize) / displaySize;
+    
     auto sampleSize = float2(layout.SampleSize);
     auto displayCenter = displaySize / 2.f;
     auto reducedDisplaySize = displayCenter - sampleSize / 2.f;

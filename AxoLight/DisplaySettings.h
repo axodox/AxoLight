@@ -47,7 +47,7 @@ namespace AxoLight::Display
   struct DisplaySettings
   {
     float AspectRatio;
-    float SampleSize;
+    winrt::Windows::Foundation::Numerics::float2 SampleSize;
     std::vector<winrt::Windows::Foundation::Numerics::float2> SamplePoints;
 
     static DisplaySettings FromLayout(const DisplayLightLayout& layout);
