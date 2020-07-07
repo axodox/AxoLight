@@ -302,7 +302,7 @@ namespace AxoLight::Graphics
       D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc{};
       viewDesc.Format = DXGI_FORMAT_UNKNOWN;
       viewDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-      viewDesc.Buffer.NumElements = items.size();
+      viewDesc.Buffer.NumElements = (uint32_t)items.size();
 
       winrt::com_ptr<ID3D11ShaderResourceView> view;
       winrt::check_hresult(device->CreateShaderResourceView(buffer.get(), &viewDesc, view.put()));

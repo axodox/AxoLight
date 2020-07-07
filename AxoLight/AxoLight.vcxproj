@@ -101,6 +101,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AdaLightController.h" />
+    <ClInclude Include="Colors.h" />
     <ClInclude Include="DisplaySettings.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="Infrastructure.h" />
@@ -109,6 +110,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AdaLightController.cpp" />
+    <ClCompile Include="Colors.cpp" />
     <ClCompile Include="DisplaySettings.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="Infrastructure.cpp" />

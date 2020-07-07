@@ -1,4 +1,5 @@
 ﻿#pragma once
+#define NOMINMAX
 #define _USE_MATH_DEFINES
 
 #include <array>

@@ -3,8 +3,10 @@
 #include "Graphics.h"
 #include "Infrastructure.h"
 #include "SettingsImporter.h"
+#include "Colors.h"
 
 using namespace AxoLight::Display;
+using namespace AxoLight::Colors;
 using namespace AxoLight::Graphics;
 using namespace AxoLight::Infrastructure;
 using namespace AxoLight::Lighting;
@@ -95,7 +97,7 @@ int main()
   memset(pixels.data(), 127, pixels.size() * 4);
   auto texture = d3d11_texture_2d::make_immutable<uint32_t>(renderer.device, DXGI_FORMAT_B8G8R8A8_UNORM, 4, 4, pixels);*/
 
-  std::vector<RGB> lights;
+  std::vector<rgb> lights;
   lights.reserve(displaySettings.SamplePoints.size());
   while (true)
   {
@@ -132,6 +134,7 @@ int main()
     {
       lights.push_back({ uint8_t(light[0]), uint8_t(light[1]), uint8_t(light[2]) });
     }
+    enhance(lights);
     controller.Push(lights);
 
 #ifndef NDEBUG

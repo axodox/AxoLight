@@ -48,7 +48,7 @@ namespace AxoLight::Lighting
   177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
   215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
 
-  void AdaLightController::Push(const std::vector<RGB>& colors)
+  void AdaLightController::Push(const std::vector<Colors::rgb>& colors)
   {
     if (!_serialWriter) throw hresult_illegal_method_call(L"Cannot push colors if no device is connected");
 
@@ -84,9 +84,9 @@ namespace AxoLight::Lighting
 
     for (auto& color : colors)
     {
-      messsage.push_back(_gamma8[color.G]);
-      messsage.push_back(_gamma8[color.R]);
-      messsage.push_back(_gamma8[color.B]);
+      messsage.push_back(_gamma8[color.g]);
+      messsage.push_back(_gamma8[color.r]);
+      messsage.push_back(_gamma8[color.b]);
     }
 
     _serialWriter.WriteBytes(messsage);

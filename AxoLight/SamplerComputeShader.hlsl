@@ -20,7 +20,7 @@ void main(
   bool isLeader = !any(threadId);
   if (isLeader)
   {
-    _samplePoint = _samplePoints[groupId.x];
+    _samplePoint = _samplePoints[groupId.x].xy;
   }
   GroupMemoryBarrierWithGroupSync();
 
@@ -29,18 +29,20 @@ void main(
   if (offsetPoint.x >= 0 && offsetPoint.y >= 0 && offsetPoint.x <= 1 && offsetPoint.y <= 1)
   {
     float4 color = _texture.SampleLevel(_sampler, offsetPoint, 0);
-
-    uint4 value = uint4(255 * color.r, 255 * color.g, 255 * color.b, 1);
-    InterlockedAdd(_sum.x, value.x);
-    InterlockedAdd(_sum.y, value.y);
-    InterlockedAdd(_sum.z, value.z);
-    InterlockedAdd(_sum.w, 1);
+    if (any(color.rgb))
+    {
+      uint4 value = uint4(255 * color.r, 255 * color.g, 255 * color.b, 1);
+      InterlockedAdd(_sum.x, value.x);
+      InterlockedAdd(_sum.y, value.y);
+      InterlockedAdd(_sum.z, value.z);
+      InterlockedAdd(_sum.w, 1);
+    }
   }
 
   GroupMemoryBarrierWithGroupSync();
   if (isLeader)
   {
-    uint4 value = _sum.xyzw / _sum.w;
+    uint4 value = _sum.w > 0 ? _sum.xyzw / _sum.w : 0;
     _sumTexture[groupId.x] = value;
   }
 }

@@ -1,12 +1,8 @@
 #pragma once
+#include "Colors.h"
 
 namespace AxoLight::Lighting
 {
-  struct RGB
-  {
-    uint8_t R, G, B;
-  };
-
   struct AdaLightOptions
   {
     uint16_t UsbVendorId = 0x1A86;
@@ -21,7 +17,7 @@ namespace AxoLight::Lighting
     AdaLightController(const AdaLightOptions& options = {});
 
     bool IsConnected();
-    void Push(const std::vector<RGB>& colors);
+    void Push(const std::vector<Colors::rgb>& colors);
 
   private:
     winrt::Windows::Storage::Streams::DataWriter _serialWriter = nullptr;
