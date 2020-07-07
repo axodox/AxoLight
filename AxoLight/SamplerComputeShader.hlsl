@@ -9,7 +9,7 @@ cbuffer constants_t: register(b0)
   float2 SampleStep;
 };
 
-groupshared float2 _samplePoint;
+groupshared float2 _samplePoint, _sampleDirection;
 groupshared uint4 _sum = uint4(0, 0, 0, 0);
 
 [numthreads(16, 16, 1)]
@@ -21,10 +21,11 @@ void main(
   if (isLeader)
   {
     _samplePoint = _samplePoints[groupId.x].xy;
+    _sampleDirection = float2(cos(groupId.x), sin(groupId.x));
   }
   GroupMemoryBarrierWithGroupSync();
 
-  float2 offsetPoint = _samplePoint + SampleOffset + SampleStep * threadId.xy;
+  float2 offsetPoint = _samplePoint + _sampleDirection * (SampleOffset + SampleStep * threadId.xy);
 
   if (offsetPoint.x >= 0 && offsetPoint.y >= 0 && offsetPoint.x <= 1 && offsetPoint.y <= 1)
   {
@@ -35,7 +36,7 @@ void main(
       InterlockedAdd(_sum.x, value.x);
       InterlockedAdd(_sum.y, value.y);
       InterlockedAdd(_sum.z, value.z);
-      InterlockedAdd(_sum.w, 1);
+      InterlockedAdd(_sum.w, value.w);
     }
   }
 

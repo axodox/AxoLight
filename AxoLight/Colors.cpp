@@ -133,14 +133,32 @@ namespace AxoLight::Colors
     {0.6f, 0.8f}
   };
 
+  const float _maxLightness = 0.7f;
+
   void enhance(std::vector<rgb>& colors)
   {
+    uint32_t sumLightness = 0u;
+
     for (auto& rgb : colors)
     {
       auto hsl = rgb_to_hsl(rgb);
       hsl.s = saturation_tf(hsl.s);
       hsl.l = brightness_tf(hsl.l);
       rgb = hsl_to_rgb(hsl);
+
+      sumLightness += rgb.r + rgb.g + rgb.b;
+    }
+
+    auto avgLightness = sumLightness / 255.f / 3.f / colors.size();
+    if (avgLightness > _maxLightness)
+    {
+      auto factor = _maxLightness / avgLightness;
+      for (auto& rgb : colors)
+      {
+        rgb.r *= factor;
+        rgb.g *= factor;
+        rgb.b *= factor;
+      }
     }
   }
 }
