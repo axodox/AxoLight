@@ -16,6 +16,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Windows.Storage;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -224,6 +225,24 @@ namespace AxoLightCalibrator
       _timer.Tick += OnTimerTick;
       _timer.Interval = TimeSpan.FromMilliseconds(16);
       _timer.Start();
+    }
+
+    private async void SaveDataPoint()
+    {
+      var folder = KnownFolders.DocumentsLibrary;
+
+      {
+        var rgbMapping = $"{TargetRGB.R},{TargetRGB.G},{TargetRGB.B},{LedColor.R},{LedColor.G},{LedColor.B}\r\n";
+        var rgbFile = await folder.CreateFileAsync("rgbMapping.csv", CreationCollisionOption.OpenIfExists);
+        await FileIO.AppendTextAsync(rgbFile, rgbMapping);
+      }
+
+      {
+        var hsl = RgbToHsl(LedColor);
+        var hslMapping = $"{_referenceHSL.H}, {_referenceHSL.S}, {_referenceHSL.L},{hsl.H},{hsl.S},{hsl.L}\r\n";
+        var hslFile = await folder.CreateFileAsync("hslMapping.csv", CreationCollisionOption.OpenIfExists);
+        await FileIO.AppendTextAsync(hslFile, hslMapping);
+      }      
     }
 
     private async void OnTimerTick(object sender, object e)

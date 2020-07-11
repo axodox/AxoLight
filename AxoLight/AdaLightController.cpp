@@ -84,8 +84,8 @@ namespace AxoLight::Lighting
 
     for (auto& color : colors)
     {
-      messsage.push_back(_gamma8[color.g]);
       messsage.push_back(_gamma8[color.r]);
+      messsage.push_back(_gamma8[color.g]);      
       messsage.push_back(_gamma8[color.b]);
     }
 

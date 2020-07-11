@@ -11,22 +11,25 @@
     <local:StringFormatter x:Key="StringFormatter"/>
   </Page.Resources>
   <Grid Background="{x:Bind ReferenceBrush, Mode=OneWay}">
-    <StackPanel Orientation="Vertical" 
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                Width="480">
-      <TextBlock>Hue (<Run Text="{x:Bind Hue, Mode=OneWay}"/>)</TextBlock>
-      <Slider Minimum="0" Maximum="360" Value="{x:Bind Hue, Mode=TwoWay}"/>
-      <TextBlock>Saturation (<Run Text="{x:Bind Saturation, Mode=OneWay}"/>)</TextBlock>
-      <Slider Minimum="0" Maximum="255" Value="{x:Bind Saturation, Mode=TwoWay}"/>
-      <TextBlock>Lightness (<Run Text="{x:Bind Lightness, Mode=OneWay}"/>)</TextBlock>
-      <Slider Minimum="0" Maximum="255" Value="{x:Bind Lightness, Mode=TwoWay}"/>
-      <TextBlock>Red (<Run Text="{x:Bind LedColor.R, Mode=OneWay}"/> / <Run Text="{x:Bind TargetRGB.R, Mode=OneWay}"/>)</TextBlock>
-      <Slider Minimum="0" Maximum="255" Value="{x:Bind Red, Mode=TwoWay}"/>
-      <TextBlock>Green (<Run Text="{x:Bind LedColor.G, Mode=OneWay}"/> / <Run Text="{x:Bind TargetRGB.G, Mode=OneWay}"/>)</TextBlock>
-      <Slider Minimum="0" Maximum="255" Value="{x:Bind Green, Mode=TwoWay}"/>
-      <TextBlock>Blue (<Run Text="{x:Bind LedColor.B, Mode=OneWay}"/> / <Run Text="{x:Bind TargetRGB.B, Mode=OneWay}"/>)</TextBlock>
-      <Slider Minimum="0" Maximum="255" Value="{x:Bind Blue, Mode=TwoWay}"/>
-    </StackPanel> 
+    <Border CornerRadius="12" Padding="12" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+      <StackPanel Orientation="Vertical" Width="480">
+        <TextBlock>Hue (<Run Text="{x:Bind Hue, Mode=OneWay}"/>)</TextBlock>
+        <Slider Minimum="0" Maximum="360" Value="{x:Bind Hue, Mode=TwoWay}"/>
+        <TextBlock>Saturation (<Run Text="{x:Bind Saturation, Mode=OneWay}"/>)</TextBlock>
+        <Slider Minimum="0" Maximum="255" Value="{x:Bind Saturation, Mode=TwoWay}"/>
+        <TextBlock>Lightness (<Run Text="{x:Bind Lightness, Mode=OneWay}"/>)</TextBlock>
+        <Slider Minimum="0" Maximum="255" Value="{x:Bind Lightness, Mode=TwoWay}"/>
+        <TextBlock>Red (<Run Text="{x:Bind LedColor.R, Mode=OneWay}"/> / <Run Text="{x:Bind TargetRGB.R, Mode=OneWay}"/>)</TextBlock>
+        <Slider Minimum="0" Maximum="255" Value="{x:Bind Red, Mode=TwoWay}"/>
+        <TextBlock>Green (<Run Text="{x:Bind LedColor.G, Mode=OneWay}"/> / <Run Text="{x:Bind TargetRGB.G, Mode=OneWay}"/>)</TextBlock>
+        <Slider Minimum="0" Maximum="255" Value="{x:Bind Green, Mode=TwoWay}"/>
+        <TextBlock>Blue (<Run Text="{x:Bind LedColor.B, Mode=OneWay}"/> / <Run Text="{x:Bind TargetRGB.B, Mode=OneWay}"/>)</TextBlock>
+        <Slider Minimum="0" Maximum="255" Value="{x:Bind Blue, Mode=TwoWay}"/>
+
+        <Button Margin="12" HorizontalAlignment="Center" Padding="6" Click="{x:Bind SaveDataPoint}">Save point</Button>
+      </StackPanel>
+    </Border>
   </Grid>
-  
+
 </Page>

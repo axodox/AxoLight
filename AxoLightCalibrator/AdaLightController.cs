@@ -51,8 +51,8 @@ namespace AxoLightCalibrator
       stream.WriteByte(checksum);
       foreach(var color in colors)
       {
-        stream.WriteByte(ToneMap(color.G));
         stream.WriteByte(ToneMap(color.R));
+        stream.WriteByte(ToneMap(color.G));
         stream.WriteByte(ToneMap(color.B));
       }
 

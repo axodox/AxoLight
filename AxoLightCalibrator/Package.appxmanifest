@@ -40,11 +40,20 @@
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
+      <Extensions>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="appdoc">
+            <uap:SupportedFileTypes>
+              <uap:FileType>.csv</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+      </Extensions>
     </Application>
   </Applications>
 
   <Capabilities>
-    <Capability Name="internetClient" />
+    <uap:Capability Name="documentsLibrary"/>
     <DeviceCapability Name="serialcommunication">
       <Device Id="vidpid:1A86 7523">
         <Function Type="name:serialPort"/>
