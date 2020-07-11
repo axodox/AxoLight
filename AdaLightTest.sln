@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AxoLight", "AxoLight\AxoLig
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AxoLightCalibrator", "AxoLightCalibrator\AxoLightCalibrator.csproj", "{538988E1-7AC0-4365-B4DD-E3EB4D785274}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AxoLightModeller", "AxoLightModeller\AxoLightModeller.csproj", "{C58A5DF5-023E-4C24-87B8-0801F06746B3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,26 @@ Global
 		{538988E1-7AC0-4365-B4DD-E3EB4D785274}.Release|x86.ActiveCfg = Release|x86
 		{538988E1-7AC0-4365-B4DD-E3EB4D785274}.Release|x86.Build.0 = Release|x86
 		{538988E1-7AC0-4365-B4DD-E3EB4D785274}.Release|x86.Deploy.0 = Release|x86
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Debug|ARM.Build.0 = Debug|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Debug|x64.Build.0 = Debug|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Debug|x86.Build.0 = Debug|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Release|ARM.ActiveCfg = Release|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Release|ARM.Build.0 = Release|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Release|ARM64.Build.0 = Release|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Release|x64.ActiveCfg = Release|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Release|x64.Build.0 = Release|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Release|x86.ActiveCfg = Release|Any CPU
+		{C58A5DF5-023E-4C24-87B8-0801F06746B3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
