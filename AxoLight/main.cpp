@@ -26,6 +26,122 @@ struct constants_t
   float2 SampleStep;
 };
 
+union rect
+{
+  struct {
+    float left, top, right, bottom;
+  };
+  struct {
+    float2 top_left, bottom_right;
+  };
+
+  rect(float top, float left, float bottom, float right) :
+    left(left),
+    top(top),
+    right(right),
+    bottom(bottom)
+  { }
+
+  rect(float2 topLeft, float2 bottomRight) :
+    left(topLeft.x),
+    top(topLeft.y),
+    right(bottomRight.x),
+    bottom(bottomRight.y)
+  { }
+
+  bool intersects(const rect& other) const
+  {
+    return (left < other.right && right > other.left && top > other.bottom && bottom < other.top);
+  }
+
+  float2 center() const
+  {
+    return (top_left + bottom_right) / 2.f;
+  }
+};
+
+struct SamplingDescription
+{
+  std::vector<rect> Rects;
+  vector<vector<pair<uint16_t, float>>> RectFactors;
+
+  static SamplingDescription Create(const DisplaySettings& settings, size_t verticalDivisions = 32)
+  {
+    auto horizontalDivisions = size_t(verticalDivisions * settings.AspectRatio);
+
+    //
+    vector<rect> lightRects;
+    lightRects.reserve(settings.SamplePoints.size());
+    auto sampleOffset = settings.SampleSize / float2(2.f, -2.f);
+    for (auto& samplePoint : settings.SamplePoints)
+    {
+      lightRects.push_back({ samplePoint - sampleOffset, samplePoint + sampleOffset });
+    }
+
+    //
+    vector<vector<pair<uint16_t, float>>> lightsDisplayRectFactors(settings.SamplePoints.size());
+
+    vector<rect> displayRects;
+    displayRects.reserve(verticalDivisions * horizontalDivisions);
+
+    float2 step{ 1.f / horizontalDivisions, 1.f / verticalDivisions };
+    rect displayRect{ step.y, 0, 0, step.x };
+    for (size_t y = 0u; y < verticalDivisions; y++)
+    {
+      displayRect.left = 0;
+      displayRect.right = step.x;
+
+      for (size_t x = 0u; x < horizontalDivisions; x++)
+      {
+        uint16_t lightIndex = 0u;
+        bool isUsed = false;
+        for (auto& sampleRect : lightRects)
+        {
+          if (sampleRect.intersects(displayRect))
+          {
+            isUsed = true;
+
+            auto weight = 1.f - length((displayRect.center() - sampleRect.center()) / settings.SampleSize);
+            lightsDisplayRectFactors[lightIndex].push_back({ displayRects.size(), weight });
+          }
+
+          lightIndex++;
+        }
+
+        if (isUsed)
+        {
+          displayRects.push_back(displayRect);
+        }
+
+        displayRect.left += step.x;
+        displayRect.right += step.x;
+      }
+
+      displayRect.top += step.y;
+      displayRect.bottom += step.y;
+    }
+
+    //
+    for (auto& lightDisplayRectFactors : lightsDisplayRectFactors)
+    {
+      auto totalWeight = 0.f;
+      for (auto& displayRectFactor : lightDisplayRectFactors)
+      {
+        totalWeight += displayRectFactor.second;
+      }
+
+      for (auto& displayRectFactor : lightDisplayRectFactors)
+      {
+        displayRectFactor.second /= totalWeight;
+      }
+    }
+
+    return { displayRects, lightsDisplayRectFactors };
+  }
+};
+
+
+
 int main()
 {
   init_apartment();
@@ -33,7 +149,7 @@ int main()
   auto root = get_root();
   auto settings = SettingsImporter::Parse(root / L"settings.json");
   auto displaySettings = DisplaySettings::FromLayout(settings.LightLayout);
-  
+
   AdaLightController controller{ settings.ControllerOptions };
   if (!controller.IsConnected()) return 0;
 
@@ -45,14 +161,14 @@ int main()
   com_ptr<IDXGIAdapter> adapter;
   check_hresult(output->GetParent(__uuidof(IDXGIAdapter), adapter.put_void()));
 
-  MONITORINFOEX x;
+  /*MONITORINFOEX x;
   x.cbSize = sizeof(MONITORINFOEX);
 
   GetMonitorInfo(desc.Monitor, &x);
 
   DISPLAY_DEVICE dev = {};
   dev.cb = sizeof(dev);
-  EnumDisplayDevices(desc.DeviceName, 0, &dev, 0);
+  EnumDisplayDevices(desc.DeviceName, 0, &dev, 0);*/
 
 #ifndef NDEBUG
   auto window = create_debug_window();
@@ -75,35 +191,30 @@ int main()
 
   auto sampler = d3d11_sampler_state(renderer.device, D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
 
-  constants_t constants{
+  /*constants_t constants{
     displaySettings.SampleSize / -2,
     displaySettings.SampleSize / 16
   };
   auto constantBuffer = d3d11_constant_buffer<constants_t>::make_dynamic(renderer.device);
-  constantBuffer.update(renderer.context, constants);
+  constantBuffer.update(renderer.context, constants);*/
 
-  vector<float4> points;
-  for (auto& point : displaySettings.SamplePoints)
-  {
-    points.push_back({ point.x, point.y, 0, 0 });
-  }
+  auto samplingDescription = SamplingDescription::Create(displaySettings);
 
-  auto samplePoints = d3d11_structured_buffer<float4>::make_immutable(renderer.device, points);
-  auto ledColorSums = d3d11_structured_buffer<array<uint32_t, 4>>::make_writeable(renderer.device, (uint32_t)displaySettings.SamplePoints.size());
+  auto samplePoints = d3d11_structured_buffer<rect>::make_immutable(renderer.device, samplingDescription.Rects);
+  auto ledColorSums = d3d11_structured_buffer<array<uint32_t, 4>>::make_writeable(renderer.device, samplingDescription.Rects.size());
   auto samplerShader = d3d11_compute_shader(renderer.device, root / L"SamplerComputeShader.cso");
-  auto ledColorStage = d3d11_structured_buffer<array<uint32_t, 4>>::make_staging(renderer.device, (uint32_t)displaySettings.SamplePoints.size());
+  auto ledColorStage = d3d11_structured_buffer<array<uint32_t, 4>>::make_staging(renderer.device, samplingDescription.Rects.size());
 
- /* vector<uint32_t> pixels(16);
-  memset(pixels.data(), 127, pixels.size() * 4);
-  auto texture = d3d11_texture_2d::make_immutable<uint32_t>(renderer.device, DXGI_FORMAT_B8G8R8A8_UNORM, 4, 4, pixels);*/
+  /* vector<uint32_t> pixels(16);
+   memset(pixels.data(), 127, pixels.size() * 4);
+   auto texture = d3d11_texture_2d::make_immutable<uint32_t>(renderer.device, DXGI_FORMAT_B8G8R8A8_UNORM, 4, 4, pixels);*/
 
-  std::vector<rgb> lights;
-  lights.reserve(displaySettings.SamplePoints.size());
+  std::vector<rgb> lights(displaySettings.SamplePoints.size());
   while (true)
   {
     auto& texture = duplication.lock_frame(1000u, [&] {
       controller.Push(lights);
-    });
+      });
 
 #ifndef NDEBUG
     auto& target = renderer.render_target();
@@ -124,16 +235,27 @@ int main()
     texture.set(renderer.context, d3d11_shader_stage::cs);
     samplePoints.set_readonly(renderer.context, 1);
     ledColorSums.set_writeable(renderer.context);
-    constantBuffer.set(renderer.context, d3d11_shader_stage::cs);
-    samplerShader.run(renderer.context, (uint32_t)displaySettings.SamplePoints.size());
+    //constantBuffer.set(renderer.context, d3d11_shader_stage::cs);
+    samplerShader.run(renderer.context, (uint32_t)samplingDescription.Rects.size());
     ledColorSums.copy_to(renderer.context, ledColorStage);
     auto data = ledColorStage.get_data(renderer.context);
 
-    lights.clear();
-    for (auto& light : data)
+    auto it = lights.begin();
+    for (auto rectFactors : samplingDescription.RectFactors)
     {
-      lights.push_back({ uint8_t(light[0]), uint8_t(light[1]), uint8_t(light[2]) });
+      float4 color{};
+      for (auto rectFactor : rectFactors)
+      {
+        auto& sample = data[rectFactor.first];
+
+        color += float4(sample[0], sample[1], sample[2], sample[3]) * rectFactor.second;
+      }
+
+      rgb newColor{ uint8_t(color.x), uint8_t(color.y), uint8_t(color.z) };
+      //newColor.apply_gamma(3.f);
+      *it++ = lerp(*it, newColor, 0.5f);
     }
+        
     enhance(lights);
     controller.Push(lights);
 

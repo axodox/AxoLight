@@ -21,7 +21,7 @@ namespace AxoLight::Display
     DisplayPositionReference Reference;
     float X, Y;
 
-    winrt::Windows::Foundation::Numerics::float2 ToTexturePosition(const DisplaySize& size) const;
+    winrt::Windows::Foundation::Numerics::float2 ToAbsolutePosition(const DisplaySize& size) const;
   };
 
   struct DisplayLightStrip

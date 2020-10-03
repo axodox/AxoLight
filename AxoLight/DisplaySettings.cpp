@@ -14,26 +14,6 @@ namespace AxoLight::Display
     Bottom
   };
 
-
-
-  struct AngleRange
-  {
-    float Min, Max;
-    Side Side;
-
-    bool Contains(float angle)
-    {
-      if (Min < Max)
-      {
-        return Min <= angle && angle <= Max;
-      }
-      else
-      {
-        return (Min <= angle && angle <= M_PI) || (-M_PI <= angle && angle <= Max);
-      }
-    }
-  };
-
   DisplaySettings DisplaySettings::FromLayout(const DisplayLightLayout& layout)
   {
     DisplaySettings settings{};
@@ -43,58 +23,18 @@ namespace AxoLight::Display
     settings.SampleSize = float2(layout.SampleSize) / displaySize;
     
     auto sampleSize = float2(layout.SampleSize);
-    auto displayCenter = displaySize / 2.f;
-    auto reducedDisplaySize = displayCenter - sampleSize / 2.f;
+    auto displayCenter = displaySize / 2.f;    
     
-    array<AngleRange, 4> angleRanges = {
-      AngleRange { atan2(-reducedDisplaySize.y, reducedDisplaySize.x), atan2(reducedDisplaySize.y, reducedDisplaySize.x), Side::Right },
-      AngleRange { atan2(reducedDisplaySize.y, reducedDisplaySize.x), atan2(reducedDisplaySize.y, -reducedDisplaySize.x), Side::Top },
-      AngleRange { atan2(reducedDisplaySize.y, -reducedDisplaySize.x), atan2(-reducedDisplaySize.y, -reducedDisplaySize.x), Side::Left },
-      AngleRange { atan2(-reducedDisplaySize.y, -reducedDisplaySize.x), atan2(-reducedDisplaySize.y, reducedDisplaySize.x), Side::Bottom }
-    };
-
-    auto startPosition = layout.StartPosition.ToTexturePosition(layout.DisplaySize);
+    auto startPosition = layout.StartPosition.ToAbsolutePosition(layout.DisplaySize);
     for (auto& segment : layout.Segments)
     {
-      auto endPosition = segment.EndPosition.ToTexturePosition(layout.DisplaySize);
+      auto endPosition = segment.EndPosition.ToAbsolutePosition(layout.DisplaySize);
 
       auto lightDistance = (endPosition - startPosition) / max((float)segment.LightCount - 1.f, 1.f);
       for (auto i = 0u; i < segment.LightCount; i++)
       {
         auto position = startPosition + float(i) * lightDistance;
-
-        auto vectorFromCenter = position - displayCenter;
-        auto angle = atan2(vectorFromCenter.y, vectorFromCenter.x);
-
-        for (auto angleRange : angleRanges)
-        {
-          if (angleRange.Contains(angle))
-          {
-            switch (angleRange.Side)
-            {
-            case Side::Right:
-              position.x = reducedDisplaySize.x;
-              position.y = (vectorFromCenter.y / vectorFromCenter.x) * position.x;
-              break;
-            case Side::Left:
-              position.x = -reducedDisplaySize.x;
-              position.y = (vectorFromCenter.y / vectorFromCenter.x) * position.x;
-              break;
-            case Side::Top:
-              position.y = reducedDisplaySize.y;
-              position.x = (vectorFromCenter.x / vectorFromCenter.y) * position.y;
-              break;
-            case Side::Bottom:
-              position.y = -reducedDisplaySize.y;
-              position.x = (vectorFromCenter.x / vectorFromCenter.y) * position.y;
-              break;
-            }
-            break;
-          }
-        }
-
-        position = (float2(position.x, -position.y) + displayCenter) / displaySize;
-        settings.SamplePoints.push_back(position);
+        settings.SamplePoints.push_back(position / displaySize);
       }
 
       startPosition = endPosition;
@@ -103,7 +43,7 @@ namespace AxoLight::Display
     return settings;
   }
 
-  winrt::Windows::Foundation::Numerics::float2 DisplayPosition::ToTexturePosition(const Display::DisplaySize& size) const
+  winrt::Windows::Foundation::Numerics::float2 DisplayPosition::ToAbsolutePosition(const Display::DisplaySize& size) const
   {
     float2 position;
     switch (Reference)

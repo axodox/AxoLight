@@ -167,4 +167,26 @@ namespace AxoLight::Colors
       }
     }
   }
+  
+  rgb lerp(const rgb& a, const rgb& b, float factor)
+  {
+    auto invFactor = 1 - factor;
+    return {
+      uint8_t(a.r * invFactor + b.r * factor),
+      uint8_t(a.g * invFactor + b.g * factor),
+      uint8_t(a.b * invFactor + b.b * factor)
+    };
+  }
+  
+  void rgb::apply_gamma(float value)
+  {
+    r = uint8_t(gamma(r / 255.f, value) * 255.f);
+    g = uint8_t(gamma(g / 255.f, value) * 255.f);
+    b = uint8_t(gamma(b / 255.f, value) * 255.f);
+  }
+
+  float rgb::gamma(float value, float gamma)
+  {
+    return pow(value, gamma);
+  }
 }

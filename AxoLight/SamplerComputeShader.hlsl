@@ -1,43 +1,37 @@
 SamplerState _sampler : register(s0);
 Texture2D _texture : register(t0);
-StructuredBuffer<float4> _samplePoints : register(t1);
+StructuredBuffer<float4> _sampleRects : register(t1);
 RWStructuredBuffer<uint4> _sumTexture : register(u0);
 
-cbuffer constants_t: register(b0)
-{
-  float2 SampleOffset;
-  float2 SampleStep;
-};
-
-groupshared float2 _samplePoint, _sampleDirection;
+groupshared float4 _sampleRect;
+groupshared float2 _sampleStep;
 groupshared uint4 _sum = uint4(0, 0, 0, 0);
 
-[numthreads(16, 16, 1)]
-void main( 
+#define SAMPLE_POINTS 16
+
+[numthreads(SAMPLE_POINTS, SAMPLE_POINTS, 1)]
+void main(
   uint3 groupId : SV_GroupID,
   uint3 threadId : SV_GroupThreadID)
 {
   bool isLeader = !any(threadId);
   if (isLeader)
   {
-    _samplePoint = _samplePoints[groupId.x].xy;
-    _sampleDirection = float2(cos(groupId.x), sin(groupId.x));
+    _sampleRect = _sampleRects[groupId.x];
+    _sampleStep = (_sampleRect.zy - _sampleRect.xw) / SAMPLE_POINTS;
   }
   GroupMemoryBarrierWithGroupSync();
 
-  float2 offsetPoint = _samplePoint + _sampleDirection * (SampleOffset + SampleStep * threadId.xy);
+  float2 samplePoint = float2(0, 1) + float2(1, -1) * (_sampleRect.xw + _sampleStep * threadId.xy);
 
-  if (offsetPoint.x >= 0 && offsetPoint.y >= 0 && offsetPoint.x <= 1 && offsetPoint.y <= 1)
+  float4 color = _texture.SampleLevel(_sampler, samplePoint, 0);
+  if (any(color.rgb))
   {
-    float4 color = _texture.SampleLevel(_sampler, offsetPoint, 0);
-    if (any(color.rgb))
-    {
-      uint4 value = uint4(255 * color.r, 255 * color.g, 255 * color.b, 1);
-      InterlockedAdd(_sum.x, value.x);
-      InterlockedAdd(_sum.y, value.y);
-      InterlockedAdd(_sum.z, value.z);
-      InterlockedAdd(_sum.w, value.w);
-    }
+    uint4 value = uint4(255 * color.r, 255 * color.g, 255 * color.b, 1);
+    InterlockedAdd(_sum.x, value.x);
+    InterlockedAdd(_sum.y, value.y);
+    InterlockedAdd(_sum.z, value.z);
+    InterlockedAdd(_sum.w, value.w);
   }
 
   GroupMemoryBarrierWithGroupSync();
