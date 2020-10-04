@@ -140,7 +140,14 @@ struct SamplingDescription
   }
 };
 
-
+void LerpColors(std::vector<AxoLight::Colors::rgb>& currentColors, const std::vector<AxoLight::Colors::rgb>& targetColors)
+{
+  auto it = currentColors.begin();
+  for (auto& color : targetColors)
+  {
+    *it++ = lerp(*it, color, 0.2f);
+  }
+}
 
 int main()
 {
@@ -160,15 +167,6 @@ int main()
 
   com_ptr<IDXGIAdapter> adapter;
   check_hresult(output->GetParent(__uuidof(IDXGIAdapter), adapter.put_void()));
-
-  /*MONITORINFOEX x;
-  x.cbSize = sizeof(MONITORINFOEX);
-
-  GetMonitorInfo(desc.Monitor, &x);
-
-  DISPLAY_DEVICE dev = {};
-  dev.cb = sizeof(dev);
-  EnumDisplayDevices(desc.DeviceName, 0, &dev, 0);*/
 
 #ifndef NDEBUG
   auto window = create_debug_window();
@@ -195,12 +193,13 @@ int main()
   auto samplerShader = d3d11_compute_shader(renderer.device, root / L"SamplerComputeShader.cso");
   auto ledColorStage = d3d11_structured_buffer<array<uint32_t, 4>>::make_staging(renderer.device, samplingDescription.Rects.size());
 
-  std::vector<rgb> lights(displaySettings.SamplePoints.size());
-  std::vector<rgb> enhancedLights(displaySettings.SamplePoints.size());
+  std::vector<rgb> targetColors(displaySettings.SamplePoints.size());
+  std::vector<rgb> currentColors(displaySettings.SamplePoints.size());
   while (true)
   {
-    auto& texture = duplication.lock_frame(1000u, [&] {
-      controller.Push(lights);
+    auto& texture = duplication.lock_frame(17u, [&] {
+      LerpColors(currentColors, targetColors);
+      controller.Push(currentColors);
       });
 
 #ifndef NDEBUG
@@ -226,7 +225,7 @@ int main()
     ledColorSums.copy_to(renderer.context, ledColorStage);
     auto data = ledColorStage.get_data(renderer.context);
 
-    auto it = lights.begin();
+    auto it = targetColors.begin();
     for (auto rectFactors : samplingDescription.RectFactors)
     {
       float3 color{};
@@ -238,13 +237,13 @@ int main()
       }
 
       rgb newColor{ uint8_t(color.x), uint8_t(color.y), uint8_t(color.z) };
-      //newColor.apply_gamma(3.f);
-      *it++ = lerp(*it, newColor, 0.2f);
+      *it++ = newColor;
     }
 
-    memcpy(enhancedLights.data(), lights.data(), lights.size() * sizeof(rgb));
-    enhance(enhancedLights);
-    controller.Push(enhancedLights);
+    enhance(targetColors);
+
+    LerpColors(currentColors, targetColors);
+    controller.Push(currentColors);
 
 #ifndef NDEBUG
     renderer.swap_chain->Present(1, 0);
@@ -255,3 +254,4 @@ int main()
 
   return 0;
 }
+
