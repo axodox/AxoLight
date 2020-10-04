@@ -65,7 +65,7 @@ struct SamplingDescription
   std::vector<rect> Rects;
   vector<vector<pair<uint16_t, float>>> RectFactors;
 
-  static SamplingDescription Create(const DisplaySettings& settings, size_t verticalDivisions = 32)
+  static SamplingDescription Create(const DisplaySettings& settings, size_t verticalDivisions = 16)
   {
     auto horizontalDivisions = size_t(verticalDivisions * settings.AspectRatio);
 
@@ -101,7 +101,7 @@ struct SamplingDescription
           {
             isUsed = true;
 
-            auto weight = 1.f - length((displayRect.center() - sampleRect.center()) / settings.SampleSize);
+            auto weight = 1.f - length((displayRect.center() - sampleRect.center()) / 2.f / settings.SampleSize);
             lightsDisplayRectFactors[lightIndex].push_back({ displayRects.size(), weight });
           }
 
@@ -188,28 +188,15 @@ int main()
 #endif // NDEBUG  
 
   auto duplication = d3d11_desktop_duplication(renderer.device, output);
-
   auto sampler = d3d11_sampler_state(renderer.device, D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
-
-  /*constants_t constants{
-    displaySettings.SampleSize / -2,
-    displaySettings.SampleSize / 16
-  };
-  auto constantBuffer = d3d11_constant_buffer<constants_t>::make_dynamic(renderer.device);
-  constantBuffer.update(renderer.context, constants);*/
-
   auto samplingDescription = SamplingDescription::Create(displaySettings);
-
   auto samplePoints = d3d11_structured_buffer<rect>::make_immutable(renderer.device, samplingDescription.Rects);
   auto ledColorSums = d3d11_structured_buffer<array<uint32_t, 4>>::make_writeable(renderer.device, samplingDescription.Rects.size());
   auto samplerShader = d3d11_compute_shader(renderer.device, root / L"SamplerComputeShader.cso");
   auto ledColorStage = d3d11_structured_buffer<array<uint32_t, 4>>::make_staging(renderer.device, samplingDescription.Rects.size());
 
-  /* vector<uint32_t> pixels(16);
-   memset(pixels.data(), 127, pixels.size() * 4);
-   auto texture = d3d11_texture_2d::make_immutable<uint32_t>(renderer.device, DXGI_FORMAT_B8G8R8A8_UNORM, 4, 4, pixels);*/
-
   std::vector<rgb> lights(displaySettings.SamplePoints.size());
+  std::vector<rgb> enhancedLights(displaySettings.SamplePoints.size());
   while (true)
   {
     auto& texture = duplication.lock_frame(1000u, [&] {
@@ -235,7 +222,6 @@ int main()
     texture.set(renderer.context, d3d11_shader_stage::cs);
     samplePoints.set_readonly(renderer.context, 1);
     ledColorSums.set_writeable(renderer.context);
-    //constantBuffer.set(renderer.context, d3d11_shader_stage::cs);
     samplerShader.run(renderer.context, (uint32_t)samplingDescription.Rects.size());
     ledColorSums.copy_to(renderer.context, ledColorStage);
     auto data = ledColorStage.get_data(renderer.context);
@@ -243,21 +229,22 @@ int main()
     auto it = lights.begin();
     for (auto rectFactors : samplingDescription.RectFactors)
     {
-      float4 color{};
-      for (auto rectFactor : rectFactors)
+      float3 color{};
+      for (auto& [cell, factor] : rectFactors)
       {
-        auto& sample = data[rectFactor.first];
+        auto& sample = data[cell];
 
-        color += float4(sample[0], sample[1], sample[2], sample[3]) * rectFactor.second;
+        color += float3(sample[0], sample[1], sample[2]) * factor;
       }
 
       rgb newColor{ uint8_t(color.x), uint8_t(color.y), uint8_t(color.z) };
       //newColor.apply_gamma(3.f);
-      *it++ = lerp(*it, newColor, 0.5f);
+      *it++ = lerp(*it, newColor, 0.2f);
     }
-        
-    enhance(lights);
-    controller.Push(lights);
+
+    memcpy(enhancedLights.data(), lights.data(), lights.size() * sizeof(rgb));
+    enhance(enhancedLights);
+    controller.Push(enhancedLights);
 
 #ifndef NDEBUG
     renderer.swap_chain->Present(1, 0);
