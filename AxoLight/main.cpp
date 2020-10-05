@@ -149,6 +149,15 @@ void LerpColors(std::vector<AxoLight::Colors::rgb>& currentColors, const std::ve
   }
 }
 
+float ease(float t, float p0, float p1, float max = 1)
+{
+  if (t < p0) return 0;
+  if (t > p1) return max;
+
+  float x = 2 * ((t - p0) / (p1 - p0) - 0.5);
+  return 0.5 * (sin(x * 2 / DirectX::XM_PI) + 1) * max;
+}
+
 int main()
 {
   init_apartment();
@@ -161,9 +170,6 @@ int main()
   if (!controller.IsConnected()) return 0;
 
   auto output = get_default_output();
-
-  DXGI_OUTPUT_DESC1 desc;
-  output.as<IDXGIOutput6>()->GetDesc1(&desc);
 
   com_ptr<IDXGIAdapter> adapter;
   check_hresult(output->GetParent(__uuidof(IDXGIAdapter), adapter.put_void()));
@@ -193,6 +199,12 @@ int main()
   auto samplerShader = d3d11_compute_shader(renderer.device, root / L"SamplerComputeShader.cso");
   auto ledColorStage = d3d11_structured_buffer<array<uint32_t, 4>>::make_staging(renderer.device, samplingDescription.Rects.size());
 
+  struct RenderingConstants
+  {
+    bool IsHdr;
+  } contants;
+  auto constantsBuffer = d3d11_constant_buffer<RenderingConstants>::make_dynamic(renderer.device);
+
   std::vector<rgb> targetColors(displaySettings.SamplePoints.size());
   std::vector<rgb> currentColors(displaySettings.SamplePoints.size());
   while (true)
@@ -217,6 +229,10 @@ int main()
 #endif
 
     //
+    contants.IsHdr = duplication.is_hdr();
+    constantsBuffer.update(renderer.context, contants);
+    constantsBuffer.set(renderer.context, d3d11_shader_stage::cs);
+
     sampler.set(renderer.context, d3d11_shader_stage::cs);
     texture.set(renderer.context, d3d11_shader_stage::cs);
     samplePoints.set_readonly(renderer.context, 1);
@@ -228,15 +244,19 @@ int main()
     auto it = targetColors.begin();
     for (auto rectFactors : samplingDescription.RectFactors)
     {
-      float3 color{};
+      float4 color{};
       for (auto& [cell, factor] : rectFactors)
       {
-        auto& sample = data[cell];
+        auto& sampleU = data[cell];
+        auto sampleF = float3(sampleU[0] / 255.f, sampleU[1] / 255.f, sampleU[2] / 255.f);
+        rgb sampleRGB(sampleF);
+        hsl sampleHSL = rgb_to_hsl(sampleRGB);
 
-        color += float3(sample[0], sample[1], sample[2]) * factor;
+        auto f = factor * ease(sampleHSL.l, 0.05, 0.5);// *(0.5 + 0.5 * sampleHSL.s);
+        color += float4(sampleF * f, f / 255.f);
       }
 
-      rgb newColor{ uint8_t(color.x), uint8_t(color.y), uint8_t(color.z) };
+      rgb newColor{ uint8_t(color.x / color.w), uint8_t(color.y / color.w), uint8_t(color.z / color.w) };
       *it++ = newColor;
     }
 

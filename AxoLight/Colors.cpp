@@ -152,6 +152,9 @@ namespace AxoLight::Colors
       hsl.l = brightness_tf(hsl.l);
       color = hsl_to_rgb(hsl);*/
 
+      /*color.r *= 0.98f;
+      color.b *= 0.85f;*/
+
       //color.apply_gamma(2.4f);
 
       sumLightness += color.r / 2 + color.g / 2 + 2 * color.b;
@@ -179,4 +182,16 @@ namespace AxoLight::Colors
       uint8_t(a.b * invFactor + b.b * factor)
     };
   }
+  
+  rgb::rgb(uint8_t r, uint8_t g, uint8_t b) :
+    r(r),
+    g(g),
+    b(b)
+  { }
+  
+  rgb::rgb(const float3 & color) :
+    r(color.x * 255),
+    g(color.y * 255),
+    b(color.z * 255)
+  { }
 }

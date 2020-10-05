@@ -6,6 +6,11 @@ RWStructuredBuffer<uint4> _sumTexture : register(u0);
 groupshared float4 _sampleRect;
 groupshared float2 _sampleStep;
 groupshared uint4 _sum = uint4(0, 0, 0, 0);
+
+cbuffer constants : register(b0)
+{
+  bool is_hdr;
+}
             
 float3 rgb_to_hsl(float3 rgb)
 {
@@ -90,13 +95,13 @@ float3 hsl_to_rgb(float3 hsl)
 }
 #define PI 3.141592653589793
 
-float ease(float t, float p0, float p1)
+float ease(float t, float p0, float p1, float max = 1)
 {
   if (t < p0) return 0;
-  if (t > p1) return 1;
+  if (t > p1) return max;
 
   float x = 2 * ((t - p0) / (p1 - p0) - 0.5);
-  return 0.5 * (sin(x * 2 / PI) + 1);
+  return 0.5 * (sin(x * 2 / PI) + 1) * max;
 }
 
 #define SAMPLE_POINTS 32
@@ -119,11 +124,17 @@ void main(
   float4 color = _texture.SampleLevel(_sampler, samplePoint, 0);
   if (any(color.rgb))
   {
+    if (is_hdr)
+    {
+      color.rgb /= 2;
+    }
+    color.rgb = min(color.rgb, float3(1, 1, 1));
+
     float3 hsl = rgb_to_hsl(color.rgb);
 
-    float factor = 255 * ease(hsl.z, 0.1, 0.8);
-    hsl.z = ease(hsl.z, 0, 0.8);
-    hsl.y = ease(hsl.y, 0.2, 1);
+    float factor = 255 * ease(hsl.z, 0.05, 0.5);// * (0.5 + 0.5 * hsl.y);
+    hsl.y = 1 - pow(hsl.y - 1, 2);
+    hsl.z = 1 - pow(hsl.z - 1, 2);//ease(hsl.z, 0, 0.7);
     
     color.rgb = hsl_to_rgb(hsl);
     

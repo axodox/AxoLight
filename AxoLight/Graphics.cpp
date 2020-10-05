@@ -471,6 +471,19 @@ namespace AxoLight::Graphics
       if (_outputDuplication == nullptr)
       {
         output->DuplicateOutput(device.get(), _outputDuplication.put());
+
+        DXGI_OUTPUT_DESC1 desc;
+        output.as<IDXGIOutput6>()->GetDesc1(&desc);
+
+        switch (desc.ColorSpace)
+        {
+        case DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020:
+          _isHdr = true;
+          break;
+        default:
+          _isHdr = false;
+          break;
+        }
       }
 
       if (_outputDuplication != nullptr)
@@ -504,5 +517,10 @@ namespace AxoLight::Graphics
   void d3d11_desktop_duplication::unlock_frame()
   {
     _outputDuplication->ReleaseFrame();
+  }
+
+  bool d3d11_desktop_duplication::is_hdr() const
+  {
+    return _isHdr;
   }
 }

@@ -519,6 +519,7 @@ namespace AxoLight::Graphics
   private:
     winrt::com_ptr<IDXGIOutputDuplication> _outputDuplication;
     std::unique_ptr<d3d11_texture_2d> _texture;
+    bool _isHdr = false;
 
   public:
     const winrt::com_ptr<ID3D11Device> device;
@@ -529,5 +530,6 @@ namespace AxoLight::Graphics
     d3d11_texture_2d& lock_frame(uint16_t timeout = 1000u, std::function<void()> timeoutCallback = nullptr);
 
     void unlock_frame();
+    bool is_hdr() const;
   };
 }

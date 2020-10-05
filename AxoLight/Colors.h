@@ -7,8 +7,9 @@ namespace AxoLight::Colors
   {
     uint8_t r, g, b;
 
-    void apply_gamma(float value);
-    static float gamma(float value, float gamma);
+    rgb() = default;
+    rgb(uint8_t r, uint8_t g, uint8_t b);
+    rgb(const winrt::Windows::Foundation::Numerics::float3& color);
   };
 
   struct hsl
