@@ -41,7 +41,7 @@ namespace AxoLight::Lighting
     return values;
   }
 
-  std::array<float, 256> _gammaMapping = make_gamma(2.0f);
+  std::array<float, 256> _gammaMapping = make_gamma(1.6f);
 
   void AdaLightController::Push(const std::vector<Colors::rgb>& colors)
   {
