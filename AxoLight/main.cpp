@@ -101,7 +101,8 @@ struct SamplingDescription
           {
             isUsed = true;
 
-            auto weight = 1.f - length((displayRect.center() - sampleRect.center()) / 2.f / settings.SampleSize);
+            auto distance = length((displayRect.center() - sampleRect.center()) / 2.f / settings.SampleSize);
+            auto weight = 1.f - (distance < 0.5f ? 0.f : (distance - 0.5) / 0.5);
             lightsDisplayRectFactors[lightIndex].push_back({ displayRects.size(), weight });
           }
 
@@ -240,7 +241,14 @@ int main()
       {
         auto& sampleU = data[cell];
         auto sampleF = float3(sampleU[0], sampleU[1], sampleU[2]);
-        color += float4(sampleF * factor, factor);
+
+        float minimum = min(sampleF.x, min(sampleF.y, sampleF.z));
+        float maximum = max(sampleF.x, max(sampleF.y, sampleF.z));
+        float brightness = (minimum + maximum) / 2.f;
+
+        float weight = 1;// brightness * 255;
+
+        color += float4(sampleF * factor * weight, factor * weight);
       }
 
       rgb newColor{ uint8_t(color.x / color.w), uint8_t(color.y / color.w), uint8_t(color.z / color.w) };

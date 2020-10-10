@@ -30,7 +30,7 @@ void main(
   float2 samplePoint = float2(0, 1) + float2(1, -1) * (_sampleRect.xw + _sampleStep * threadId.xy);
 
   float4 color = _texture.SampleLevel(_sampler, samplePoint, 0);
-  if (any(color.rgb))
+  //if (any(color.rgb))
   {
     if (is_hdr)
     {
@@ -38,7 +38,13 @@ void main(
     }
     color.rgb = min(color.rgb, float3(1, 1, 1));
 
-    uint4 value = uint4(255 * color.r, 255 * color.g, 255 * color.b, 1);
+    float minimum = min(color.r, min(color.g, color.b));
+    float maximum = max(color.r, max(color.g, color.b));
+    float brightness = (minimum + maximum) / 2.f;
+
+    float weight = 1;// brightness * 255;
+
+    uint4 value = uint4(255 * color.r * weight, 255 * color.g * weight, 255 * color.b * weight, weight);
     InterlockedAdd(_sum.x, value.x);
     InterlockedAdd(_sum.y, value.y);
     InterlockedAdd(_sum.z, value.z);
