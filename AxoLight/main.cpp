@@ -149,15 +149,6 @@ void LerpColors(std::vector<AxoLight::Colors::rgb>& currentColors, const std::ve
   }
 }
 
-float ease(float t, float p0, float p1, float max = 1)
-{
-  if (t < p0) return 0;
-  if (t > p1) return max;
-
-  float x = 2 * ((t - p0) / (p1 - p0) - 0.5);
-  return 0.5 * (sin(x * 2 / DirectX::XM_PI) + 1) * max;
-}
-
 int main()
 {
   init_apartment();
@@ -248,12 +239,8 @@ int main()
       for (auto& [cell, factor] : rectFactors)
       {
         auto& sampleU = data[cell];
-        auto sampleF = float3(sampleU[0] / 255.f, sampleU[1] / 255.f, sampleU[2] / 255.f);
-        rgb sampleRGB(sampleF);
-        hsl sampleHSL = rgb_to_hsl(sampleRGB);
-
-        auto f = factor * ease(sampleHSL.l, 0.05, 0.5);// *(0.5 + 0.5 * sampleHSL.s);
-        color += float4(sampleF * f, f / 255.f);
+        auto sampleF = float3(sampleU[0], sampleU[1], sampleU[2]);
+        color += float4(sampleF * factor, factor);
       }
 
       rgb newColor{ uint8_t(color.x / color.w), uint8_t(color.y / color.w), uint8_t(color.z / color.w) };

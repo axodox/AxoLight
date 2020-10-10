@@ -157,7 +157,7 @@ namespace AxoLight::Colors
 
       //color.apply_gamma(2.4f);
 
-      sumLightness += color.r / 2 + color.g / 2 + 2 * color.b;
+      sumLightness += color.r + color.g + color.b;
     }
 
     auto avgLightness = sumLightness / 255.f / 3.f / colors.size();

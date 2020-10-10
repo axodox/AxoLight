@@ -5,6 +5,7 @@ using namespace std;
 using namespace std::chrono;
 
 using namespace winrt;
+using namespace winrt::Windows::Foundation::Numerics;
 using namespace winrt::Windows::Devices::Enumeration;
 using namespace winrt::Windows::Devices::SerialCommunication;
 using namespace winrt::Windows::Storage::Streams;
@@ -30,23 +31,17 @@ namespace AxoLight::Lighting
     return _serialWriter != nullptr;
   }
 
-  std::array<uint8_t, 256> _gamma8 = {
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
-    1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
-    2,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  5,  5,  5,
-    5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10,
-   10, 10, 11, 11, 11, 12, 12, 13, 13, 13, 14, 14, 15, 15, 16, 16,
-   17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 24, 24, 25,
-   25, 26, 27, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 35, 35, 36,
-   37, 38, 39, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 50,
-   51, 52, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 66, 67, 68,
-   69, 70, 72, 73, 74, 75, 77, 78, 79, 81, 82, 83, 85, 86, 87, 89,
-   90, 92, 93, 95, 96, 98, 99,101,102,104,105,107,109,110,112,114,
-  115,117,119,120,122,124,126,127,129,131,133,135,137,138,140,142,
-  144,146,148,150,152,154,156,158,160,162,164,167,169,171,173,175,
-  177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
-  215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
+  std::array<float, 256> make_gamma(float gamma)
+  {
+    std::array<float, 256> values;
+    for (auto i = 0u; i < 256; i++)
+    {
+      values[i] = pow(i / 255.f, gamma) * 255.f;
+    }
+    return values;
+  }
+
+  std::array<float, 256> _gammaMapping = make_gamma(2.0f);
 
   void AdaLightController::Push(const std::vector<Colors::rgb>& colors)
   {
@@ -82,11 +77,35 @@ namespace AxoLight::Lighting
     messsage.push_back(lowCount);
     messsage.push_back(checksumCount);
 
+    float3 target{}, error{}, actual{}, correction;
     for (auto& color : colors)
     {
-      messsage.push_back(_gamma8[color.r]);
-      messsage.push_back(_gamma8[color.g]);      
-      messsage.push_back(_gamma8[color.b]);
+      target = {
+        _gammaMapping[color.r],
+        _gammaMapping[color.g],
+        _gammaMapping[color.b]
+      };
+
+      actual = {
+        round(target.x),
+        round(target.y),
+        round(target.z),
+      };
+
+      error += target - actual;
+
+      correction = {
+        round(error.x),
+        round(error.y),
+        round(error.z)
+      };
+
+      actual += correction;
+      error -= correction;
+
+      messsage.push_back((uint8_t)actual.x);
+      messsage.push_back((uint8_t)actual.y);
+      messsage.push_back((uint8_t)actual.z);
     }
 
     _serialWriter.WriteBytes(messsage);
