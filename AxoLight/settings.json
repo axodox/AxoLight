@@ -33,6 +33,22 @@
           "y": 4
         },
         "lightCount": 37
+      },
+      {
+        "endPosition": {
+          "reference": "BottomLeft",
+          "x": 2,
+          "y": 0
+        },
+        "lightCount": 0
+      },
+      {
+        "endPosition": {
+          "reference": "BottomRight",
+          "x": 2,
+          "y": 0
+        },
+        "lightCount": 71
       }
     ],
     "sampleSize": 10

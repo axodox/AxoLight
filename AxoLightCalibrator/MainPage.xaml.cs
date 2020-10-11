@@ -247,7 +247,7 @@ namespace AxoLightCalibrator
 
     private async void OnTimerTick(object sender, object e)
     {
-      var leds = new RGB[156];
+      var leds = new RGB[214];//156];
       for(var i = 0; i < leds.Length; i++)
       {
         leds[i] = LedColor;

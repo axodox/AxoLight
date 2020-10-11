@@ -98,7 +98,7 @@ namespace AxoLightCalibrator
       return values;
     }
 
-    static float[] _gammaF = MakeGamma(2.8f);
+    static float[] _gammaF = MakeGamma(1.6f);
 
     private static float ToneMap(byte p)
     {
