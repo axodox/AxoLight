@@ -1,3 +1,5 @@
+#include "ColorConversion.hlsli"
+
 SamplerState _sampler : register(s0);
 Texture2D _texture : register(t0);
 StructuredBuffer<float4> _sampleRects : register(t1);
@@ -32,7 +34,7 @@ void main(
   float4 color = _texture.SampleLevel(_sampler, samplePoint, 0);
   if (is_hdr)
   {
-    color.rgb /= 2;
+    color.rgb = pow(RemoveREC2084Curve(color.rgb), 0.35);
   }
   color.rgb = min(color.rgb, float3(1, 1, 1));
 

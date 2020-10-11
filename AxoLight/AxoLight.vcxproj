@@ -121,6 +121,7 @@
     <ClCompile Include="SettingsImporter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ColorConversion.hlsli" />
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
     <CopyFileToFolders Include="settings.json">

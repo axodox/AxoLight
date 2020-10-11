@@ -133,7 +133,7 @@ namespace AxoLight::Colors
     {0.6f, 0.8f}
   };
 
-  const float _maxLightness = 0.7f;
+  const float _maxLightness = 0.5f;
 
   void enhance(std::vector<rgb>& colors)
   {
