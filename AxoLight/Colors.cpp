@@ -133,7 +133,7 @@ namespace AxoLight::Colors
     {0.6f, 0.8f}
   };
 
-  const float _maxLightness = 0.5f;
+  const float _maxLightness = 0.75;
 
   void enhance(std::vector<rgb>& colors)
   {
@@ -142,15 +142,15 @@ namespace AxoLight::Colors
     for (auto& color : colors)
     {
       /*rgb corrected;
-      corrected.r = min(255.0, max(0.0, 0.8005918860435486 * color.r + 0.23673559725284576 * color.g + 0.054503846913576126 * color.b + 0.07293142378330231 * 255));
-      corrected.g = min(255.0, max(0.0, 0.018977604806423187 * color.r + 0.9645366072654724 * color.g + 0.06882637739181519 * color.b + 0.04205838590860367 * 255));
-      corrected.b = min(255.0, max(0.0, 0.0500728040933609 * color.r + -0.060099828988313675 * color.g + 1.0020443201065063 * color.b + 0.01855257712304592 * 255));
+      corrected.r = min(255.0, max(0.0, 0.8005918860435486 * color.r + 0.23673559725284576 * color.g + 0.054503846913576126 * color.b));
+      corrected.g = min(255.0, max(0.0, 0.018977604806423187 * color.r + 0.9645366072654724 * color.g + 0.06882637739181519 * color.b));
+      corrected.b = min(255.0, max(0.0, 0.0500728040933609 * color.r + -0.060099828988313675 * color.g + 1.0020443201065063 * color.b));
       color = corrected;*/
 
-      /*auto hsl = rgb_to_hsl(color);
-      hsl.s = saturation_tf(hsl.s);
-      hsl.l = brightness_tf(hsl.l);
-      color = hsl_to_rgb(hsl);*/
+      //auto hsl = rgb_to_hsl(color);
+      //hsl.s = saturation_tf(hsl.s);
+      //hsl.l = brightness_tf(hsl.l);
+      //color = hsl_to_rgb(hsl);
 
       /*color.r *= 0.98f;
       color.b *= 0.85f;*/

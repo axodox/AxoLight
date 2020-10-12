@@ -34,9 +34,9 @@ void main(
   float4 color = _texture.SampleLevel(_sampler, samplePoint, 0);
   if (is_hdr)
   {
-    color.rgb = pow(RemoveREC2084Curve(color.rgb), 0.35);
+    color.rgb = pow(REC709toREC2020(RemoveREC2084Curve(color.rgb)), 0.35);
   }
-  color.rgb = min(color.rgb, float3(1, 1, 1));
+  color.rgb = max(min(color.rgb, 1), 0);
 
   uint4 value = uint4(255 * color.r, 255 * color.g, 255 * color.b, 1);
   InterlockedAdd(_sum.x, value.x);

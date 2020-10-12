@@ -523,9 +523,9 @@ namespace AxoLight::Graphics
 
   public:
     const winrt::com_ptr<ID3D11Device> device;
-    const winrt::com_ptr<IDXGIOutput2> output;
+    const winrt::com_ptr<IDXGIOutput5> output;
 
-    d3d11_desktop_duplication(const winrt::com_ptr<ID3D11Device>& device, const winrt::com_ptr<IDXGIOutput2>& output);
+    d3d11_desktop_duplication(const winrt::com_ptr<ID3D11Device>& device, const winrt::com_ptr<IDXGIOutput5>& output);
 
     d3d11_texture_2d& lock_frame(uint16_t timeout = 1000u, std::function<void()> timeoutCallback = nullptr);
 

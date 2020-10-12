@@ -63,3 +63,14 @@ float3 REC709toREC2020(float3 RGB709)
   };
   return mul(ConvMat, RGB709);
 }
+
+float3 MapColors(float3 color)
+{
+  static const float3x3 ConvMat =
+  {
+      1, 0, 0,
+      0, 1, 0,
+      0, 0, 1
+  };
+  return mul(ConvMat, color);
+}

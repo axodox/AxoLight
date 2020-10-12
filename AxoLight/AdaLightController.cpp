@@ -36,7 +36,9 @@ namespace AxoLight::Lighting
     std::array<float, 256> values;
     for (auto i = 0u; i < 256; i++)
     {
-      values[i] = pow(i / 255.f, gamma) * 255.f;
+      auto value = pow(i / 255.f, gamma) * 255.f;
+      if (value < 0.2f) value = 0.f;
+      values[i] = value;
     }
     return values;
   }

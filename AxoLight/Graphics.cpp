@@ -9,11 +9,11 @@ namespace AxoLight::Graphics
 {
   winrt::com_ptr<IDXGIOutput2> get_default_output()
   {
-    com_ptr<IDXGIFactory> dxgiFactory = nullptr;
-    check_hresult(CreateDXGIFactory2(0, __uuidof(IDXGIFactory), dxgiFactory.put_void()));
+    com_ptr<IDXGIFactory1> dxgiFactory = nullptr;
+    check_hresult(CreateDXGIFactory2(0, __uuidof(IDXGIFactory1), dxgiFactory.put_void()));
 
-    com_ptr<IDXGIAdapter> dxgiAdapter;
-    for (uint32_t adapterIndex = 0u; dxgiFactory->EnumAdapters(adapterIndex, dxgiAdapter.put()) != DXGI_ERROR_NOT_FOUND; adapterIndex++)
+    com_ptr<IDXGIAdapter1> dxgiAdapter;
+    for (uint32_t adapterIndex = 0u; dxgiFactory->EnumAdapters1(adapterIndex, dxgiAdapter.put()) != DXGI_ERROR_NOT_FOUND; adapterIndex++)
     {
       DXGI_ADAPTER_DESC dxgiAdapterDesc;
       check_hresult(dxgiAdapter->GetDesc(&dxgiAdapterDesc));
@@ -44,7 +44,7 @@ namespace AxoLight::Graphics
       D3D_FEATURE_LEVEL_12_1,
       D3D_FEATURE_LEVEL_12_0,
       D3D_FEATURE_LEVEL_11_1,
-      D3D_FEATURE_LEVEL_11_0
+      D3D_FEATURE_LEVEL_11_0,
     };
 
     uint32_t creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
@@ -180,7 +180,7 @@ namespace AxoLight::Graphics
       D3D_FEATURE_LEVEL_12_1,
       D3D_FEATURE_LEVEL_12_0,
       D3D_FEATURE_LEVEL_11_1,
-      D3D_FEATURE_LEVEL_11_0
+      D3D_FEATURE_LEVEL_11_0,
     };
 
     uint32_t creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
@@ -458,20 +458,29 @@ namespace AxoLight::Graphics
     }
   }
   
-  d3d11_desktop_duplication::d3d11_desktop_duplication(const com_ptr<ID3D11Device>& device, const com_ptr<IDXGIOutput2>& output) :
+  d3d11_desktop_duplication::d3d11_desktop_duplication(const com_ptr<ID3D11Device>& device, const com_ptr<IDXGIOutput5>& output) :
     device(device),
     output(output)
   { }
   
   d3d11_texture_2d& d3d11_desktop_duplication::lock_frame(uint16_t timeout, std::function<void()> timeoutCallback)
   {
+    const DXGI_FORMAT supportedFormats[] = 
+    { 
+      DXGI_FORMAT_R16G16B16A16_FLOAT,
+      DXGI_FORMAT_R10G10B10A2_UNORM,
+      DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM,
+      DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+      DXGI_FORMAT_R8G8B8A8_UNORM
+    };
+
     com_ptr<IDXGIResource> resource;
     do
     {
       if (_outputDuplication == nullptr)
       {
-        output->DuplicateOutput(device.get(), _outputDuplication.put());
-
+        check_hresult(output->DuplicateOutput1(device.get(), 0, ARRAYSIZE(supportedFormats), supportedFormats, _outputDuplication.put()));
+        
         DXGI_OUTPUT_DESC1 desc;
         output.as<IDXGIOutput6>()->GetDesc1(&desc);
 
@@ -508,7 +517,7 @@ namespace AxoLight::Graphics
     auto texture = resource.as<ID3D11Texture2D>();
     if (!_texture || _texture->texture != texture)
     {
-      _texture = make_unique<d3d11_texture_2d>(texture);
+      _texture = make_unique<d3d11_texture_2d>(texture);      
     }
 
     return *_texture;

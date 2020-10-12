@@ -152,6 +152,8 @@ void LerpColors(std::vector<AxoLight::Colors::rgb>& currentColors, const std::ve
 
 int main()
 {
+  check_bool(SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2));
+
   init_apartment();
 
   auto root = get_root();
@@ -183,7 +185,7 @@ int main()
   d3d11_renderer renderer(adapter);
 #endif // NDEBUG  
 
-  auto duplication = d3d11_desktop_duplication(renderer.device, output);
+  auto duplication = d3d11_desktop_duplication(renderer.device, output.as<IDXGIOutput5>());
   auto sampler = d3d11_sampler_state(renderer.device, D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
   auto samplingDescription = SamplingDescription::Create(displaySettings);
   auto samplePoints = d3d11_structured_buffer<rect>::make_immutable(renderer.device, samplingDescription.Rects);
